@@ -2,10 +2,13 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const path = require("path");
+require("dotenv").config();
 const methodOverride = require("method-override")
 const ejsMate = require("ejs-mate");
 const ExpressError = require("./utils/ExpressError.js");
 const session = require("express-session");
+const connectMongo = require("connect-mongo");
+const MongoStore = connectMongo.default || connectMongo.MongoStore || connectMongo;
 const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
@@ -16,9 +19,16 @@ const listingsRouter = require("./routes/listings.js");
 const reviewsRouter = require("./routes/reviews.js");
 const userRouter = require("./routes/users.js");
 
-const MONGO_URL = 'mongodb://127.0.0.1:27017/StayScape'
+const dbUrl = process.env.ATLASDB_URL || "mongodb://127.0.0.1:27017/StayScape";
+const secret = process.env.SESSION_SECRET || "dev-secret-change-me";
+const port = process.env.PORT || 8080;
+
+if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+}
+
 async function main() {
-    await mongoose.connect(MONGO_URL);
+    await mongoose.connect(dbUrl);
 };
 
 main()
@@ -34,15 +44,27 @@ app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate)
 app.use(express.static(path.join(__dirname, "public")));
 
+const store = MongoStore.create({
+  mongoUrl: dbUrl,
+  crypto: { secret },
+  touchAfter: 24 * 3600
+});
+
+store.on("error", () => {
+    console.log("ERROR in MONGO SESSION STORE");
+});
+
 const sessionOptions = {
-    secret: "mysupersecretcode",
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-    },
+  store,
+  secret,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  }
 };
 
 app.get("/", (req, res) => {
@@ -85,6 +107,6 @@ app.use((err, req, res, next) => {
     res.status(statusCode).render("error.ejs", { message });
 });
 
-app.listen(8080, () => {
-    console.log("server is listening to port 8080")
+app.listen(port, () => {
+    console.log(`server is listening to port ${port}`)
 });
