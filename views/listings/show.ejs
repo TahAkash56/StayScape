@@ -36,8 +36,12 @@
           <p class="mb-0">
             <strong>Country:</strong> <%= listing.country %>
           </p>
+          <p class="mb-0">
+            <strong>Hosted by:</strong> <%= listing.owner ? listing.owner.username : "Unknown" %>
+          </p>
         </div>
 
+        <% if (currUser && listing.owner && currUser._id.equals(listing.owner._id)) { %>
         <div class="card-footer bg-white border-0 px-4 pb-4">
           <div class="d-flex justify-content-between">
             <a 
@@ -57,6 +61,7 @@
             </form>
           </div>
         </div>
+        <% } %>
       </div>
 
     </div>
@@ -70,6 +75,7 @@
       <div class="card shadow-sm border-0">
         <div class="card-body px-4 py-4">
 
+          <% if(currUser) { %>
           <h4 class="mb-4 fw-semibold text-center">
             Leave a Review
           </h4>
@@ -125,6 +131,11 @@
             </div>
 
           </form>
+          <% } else { %>
+            <p class="mb-0 text-center text-muted">
+              Please <a href="/login">log in</a> to leave a review.
+            </p>
+          <% } %>
         </div>
       </div>
       <hr class="my-4">
@@ -136,9 +147,9 @@
       <div class="row g-4">
         <% for (let review of listing.reviews) { %>
           <div class="col-md-6">
-            <div class="card h-100 shadow-sm border-0">
+            <div class="card h-100 shadow-sm border-2">
               <div class="card-body">
-                <h5 class="card-title">Jane Doe</h5>
+                <h5 class="card-title"><%= review.author ? review.author.username : "Anonymous" %></h5>
                 <!-- Rating -->
                 <div class="mb-2 text-warning">
                   <% for (let i = 0; i < review.rating; i++) { %>
@@ -151,9 +162,11 @@
                   <%= review.comment %>
                 </p>
 
-                <form class="mb-3" method="POST" action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
-                  <button class="btn btn-sm btn-dark">Delete</buttons>
-                </form>
+                <% if(currUser && review.author && currUser._id.equals(review.author._id)) { %>
+                  <form class="mb-3" method="POST" action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
+                    <button class="btn btn-sm btn-dark">Delete</button>
+                  </form>
+                <% } %>
               </div>
             </div>
           </div>

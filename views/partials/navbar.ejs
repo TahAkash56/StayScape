@@ -10,6 +10,15 @@
         <a class="nav-link" href="/listings">All Listings</a>
         <a class="nav-link" href="/listings/new">Add new Listing</a>
       </div>
+      <div class="navbar-nav ms-auto gap-2">
+        <% if(!currUser) { %>
+        <a class="btn btn-outline-primary btn-sm" href="/signup">Sign Up</a>
+        <a class="btn btn-outline-success btn-sm" href="/login">Login</a>
+        <% } %>
+        <% if(currUser) { %>
+        <a class="btn btn-outline-danger btn-sm" href="/logout">Logout</a>
+        <% } %>
+      </div>
     </div>
   </div>
 </nav>
